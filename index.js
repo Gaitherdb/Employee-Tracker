@@ -1,9 +1,9 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
-const { viewAllEmployees, addEmployee, updateEmployeeRole, viewAllRoles, addRole, viewAllDepartments, addDepartment } = require('/queries.js');
+const cTable = require('console.table');
+const { viewAllEmployees, addEmployee, updateEmployeeRole, viewAllRoles, addRole, viewAllDepartments, addDepartment } = require('./queries');
 
-
-const db = await mysql.createConnection(
+const db = mysql.createConnection(
     {
         host: 'localhost',
         // MySQL username,
@@ -16,9 +16,9 @@ const db = await mysql.createConnection(
 );
 
 //Initial & total view of options 
-const init = async () => {
+const prompts = () => {
 
-    await inquirer.prompt([
+    inquirer.prompt([
         {
             type: 'list',
             name: 'allOptions',
@@ -54,9 +54,14 @@ const init = async () => {
                     break;
             }
         })
-}
+};
+
+const init = async () => {
+    await prompts();
+};
 
 init();
+
 
 
 

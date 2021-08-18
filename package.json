@@ -17,8 +17,9 @@
   },
   "homepage": "https://github.com/Gaitherdb/Employee-Tracker#readme",
   "dependencies": {
+    "console.table": "^0.10.0",
     "express": "^4.17.1",
     "inquirer": "^8.1.2",
-    "mysql": "^2.18.1"
+    "mysql2": "^2.3.0"
   }
 }
