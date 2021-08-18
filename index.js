@@ -1,24 +1,24 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
-const express = require('express');
-const app = express();
+const { viewAllEmployees, addEmployee, updateEmployeeRole, viewAllRoles, addRole, viewAllDepartments, addDepartment } = require('/queries.js');
 
-const db = mysql.createConnection(
+
+const db = await mysql.createConnection(
     {
-      host: 'localhost',
-      // MySQL username,
-      user: 'root',
-      // MySQL password
-      password: 'myPw0rd',
-      database: 'movies_db'
+        host: 'localhost',
+        // MySQL username,
+        user: 'root',
+        // MySQL password
+        password: 'myPw0rd',
+        database: 'employees_db'
     },
-    console.log(`Connected to the movies_db database.`)
-  );
+    console.log(`Connected to the employees_db database.`)
+);
 
 //Initial & total view of options 
-const init = () => {
+const init = async () => {
 
-    inquirer.prompt([
+    await inquirer.prompt([
         {
             type: 'list',
             name: 'allOptions',
@@ -29,28 +29,28 @@ const init = () => {
         .then((answer) => {
             switch (answer.allOptions) {
                 case 'View All Employees':
-                   
+                    viewAllEmployees();
                     break;
                 case 'Add Employee':
-                    
+                    addEmployee();
                     break;
-                    case 'Update Employee Role':
-                   
+                case 'Update Employee Role':
+                    updateEmployeeRole();
                     break;
                 case 'View All Roles':
-                    
+                    viewAllRoles();
                     break;
-                    case 'Add Role':
-                   
+                case 'Add Role':
+                    addRole();
                     break;
                 case 'View All Departments':
-                    
+                    viewAllDepartments();
                     break;
-                    case 'Add Department':
-                   
+                case 'Add Department':
+                    addDepartment();
                     break;
                 default:
-                    
+                    console.log("Ended CMS")
                     break;
             }
         })
