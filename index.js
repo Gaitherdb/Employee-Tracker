@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
-const { viewAllEmployees, addEmployee, updateEmployeeRole, viewAllRoles, addRole, viewAllDepartments, addDepartment } = require('./queries');
+
 
 const db = mysql.createConnection(
     {
@@ -27,27 +27,110 @@ const prompts = () => {
         }
     ])
         .then((answer) => {
+            console.log(answer)
             switch (answer.allOptions) {
                 case 'View All Employees':
-                    viewAllEmployees();
+                    const viewAllEmpsql = `SELECT
+                    employee.id,
+                    employee.first_name,
+                    employee.last_name,
+                    department.department_name AS department,
+                    roles.role_title AS role,
+                    roles.role_salary AS salary,
+                    CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+                    FROM employee
+                    JOIN roles
+                    ON employee.role_id = roles.id
+                    JOIN department
+                    ON roles.department_id = department.id
+                    LEFT JOIN employee manager
+                    ON employee.manager_id = manager.id
+`;
+                    db.query(viewAllEmpsql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.table(result);
+                    })
                     break;
                 case 'Add Employee':
-                    addEmployee();
+                    inquirer.prompt([
+                        {
+                            type: 'input',
+                            name: 'add_employee',
+                            message: `What is the name of the deparment?`,
+                        },
+                    ])
+                        .then((answers) => {
+                            const addEmpsql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                            VALUES (${answers.first_name}, ${answers.last_name}, ${answers.role_id}, ${answers.manager_id});
+                            `;
+                            db.query(addEmpsql, (err, result) => {
+                                if (err) { console.log(err); }
+                                console.table(result);
+                            })
+                        })
                     break;
                 case 'Update Employee Role':
-                    updateEmployeeRole();
+                    const updateEmpRolesql = `INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
+                    VALUES (${id}, ${first_name}, ${last_name}, ${role_id}, ${manager_id});
+                    `;
+                    db.query(updateEmpRolesql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.table(result);
+                    })
                     break;
                 case 'View All Roles':
-                    viewAllRoles();
+                    const viewAllRolesql = `SELECT
+    roles.id,
+    roles.role_title AS role,
+    roles.role_salary AS salary,
+    department.department_id,
+    department.department_name AS department
+    FROM roles
+    JOIN department
+    ON roles.department_id = department.id
+    `;
+                    db.query(viewAllRolesql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.table(result);
+                    })
                     break;
                 case 'Add Role':
-                    addRole();
+                    const addRolesql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+    VALUES (${first_name}, ${last_name}, ${role_id}, ${manager_id});
+    `;
+                    db.query(addRolesql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.table(result);
+                    })
                     break;
                 case 'View All Departments':
-                    viewAllDepartments();
+                    const viewAllDepsql = `SELECT 
+                    department.id,
+                    department.department_name AS department
+                    FROM department
+                    `;
+                    db.query(viewAllDepsql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.table(result);
+                    })
                     break;
                 case 'Add Department':
-                    addDepartment();
+                    inquirer.prompt([
+                        {
+                            type: 'input',
+                            name: 'department_name',
+                            message: `What is the name of the deparment?`,
+                        },
+                    ])
+                        .then((answers) => {
+                            const addDepsql = `INSERT INTO department (department_name)
+                                VALUES (${answers.department_name});
+                                `;
+                            db.query(addDepsql, (err, result) => {
+                                if (err) { console.log(err); }
+                                console.table(result);
+                            })
+                        })
                     break;
                 default:
                     console.log("Ended CMS")
@@ -56,8 +139,8 @@ const prompts = () => {
         })
 };
 
-const init = async () => {
-    await prompts();
+const init = () => {
+    prompts();
 };
 
 init();
