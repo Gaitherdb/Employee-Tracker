@@ -27,7 +27,6 @@ const prompts = () => {
         }
     ])
         .then((answer) => {
-            console.log(answer)
             switch (answer.allOptions) {
                 case 'View All Employees':
                     const viewAllEmpsql = `SELECT
@@ -49,14 +48,31 @@ const prompts = () => {
                     db.query(viewAllEmpsql, (err, result) => {
                         if (err) { console.log(err); }
                         console.table(result);
+                        prompts();
                     })
+                    
                     break;
                 case 'Add Employee':
                     inquirer.prompt([
                         {
                             type: 'input',
-                            name: 'add_employee',
-                            message: `What is the name of the deparment?`,
+                            name: 'first_name',
+                            message: `What is the employee's first name?`,
+                        },
+                        {
+                            type: 'input',
+                            name: 'last_name',
+                            message: `What is the employee's first name?`,
+                        },
+                        {
+                            type: 'input',
+                            name: 'last_name',
+                            message: `What is the employee's first name?`,
+                        },
+                        {
+                            type: 'input',
+                            name: 'last_name',
+                            message: `What is the employee's first name?`,
                         },
                     ])
                         .then((answers) => {
