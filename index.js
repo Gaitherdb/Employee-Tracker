@@ -14,7 +14,36 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the employees_db database.`)
 );
+const getManagers = () => {
+    var managerssql = `SELECT CONCAT(' ', manager.first_name, ' ', manager.last_name) AS Manager
+    FROM employee
+    LEFT JOIN employee manager
+    ON employee.manager_id = manager.id
+    WHERE employee.manager_id IS NOT NULL`;
+    db.query(managerssql, (err, result) => {
+        if (err) { console.log(err); }
+        let array = JSON.stringify(result);
+        console.log(array)
+        let managers = array.split(' ', 3);
+        console.log(managers)
+        let spliced = managers.splice(0,1);
+       let m = managers.join(' ');
+        console.log(managers);
+        console.log(m);
+        
+        return managers;
+    })
+}
 
+const getRoles = () => {
+    var rolessql = `SELECT role_title FROM roles`;
+    db.query(rolessql, (err, result) => {
+        if (err) { console.log(err); }
+        let array = JSON.parse(JSON.stringify(result));
+        console.log(array);
+        return result;
+    })
+}
 //Initial & total view of options 
 const prompts = () => {
 
@@ -53,6 +82,10 @@ const prompts = () => {
                     
                     break;
                 case 'Add Employee':
+                    var roles = getRoles();
+                    var managers = getManagers();
+                    console.log(managers);
+                    console.log(roles);
                     inquirer.prompt([
                         {
                             type: 'input',
@@ -62,17 +95,19 @@ const prompts = () => {
                         {
                             type: 'input',
                             name: 'last_name',
-                            message: `What is the employee's first name?`,
+                            message: `What is the employee's last name?`,
                         },
                         {
-                            type: 'input',
-                            name: 'last_name',
-                            message: `What is the employee's first name?`,
+                            type: 'list',
+                            name: 'role',
+                            message: `What is the employee's role?`,
+                            choices: [roles],
                         },
                         {
-                            type: 'input',
-                            name: 'last_name',
-                            message: `What is the employee's first name?`,
+                            type: 'list',
+                            name: 'manager',
+                            message: `Who is this employee's manager?`,
+                            choices: [managers],
                         },
                     ])
                         .then((answers) => {
@@ -81,6 +116,7 @@ const prompts = () => {
                             `;
                             db.query(addEmpsql, (err, result) => {
                                 if (err) { console.log(err); }
+                                prompt();
                                 console.table(result);
                             })
                         })
