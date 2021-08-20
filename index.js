@@ -15,28 +15,30 @@ const db = mysql.createConnection(
     console.log(`Connected to the employees_db database.`)
 );
 const getManagers = () => {
-    var managerssql = `SELECT CONCAT(' ', manager.first_name, ' ', manager.last_name) AS Manager
+    var managerssql = `SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS Manager
     FROM employee
     LEFT JOIN employee manager
     ON employee.manager_id = manager.id
     WHERE employee.manager_id IS NOT NULL`;
     db.query(managerssql, (err, result) => {
         if (err) { console.log(err); }
+        console.log(result)
+        console.log(typeof result)
         let array = JSON.stringify(result);
         console.log(array)
-        let managers = array.split(' ', 3);
-        console.log(managers)
-        let spliced = managers.splice(0,1);
-       let m = managers.join(' ');
-        console.log(managers);
-        console.log(m);
-        
-        return managers;
+        console.log("parse")
+        let parse = JSON.parse(array);
+        console.log(parse)
+        console.log(typeof parse)
+        console.log(Object.values(parse))
+
+
+        return
     })
 }
 
 const getRoles = () => {
-    var rolessql = `SELECT role_title FROM roles`;
+    var rolessql = `SELECT role_id FROM roles`;
     db.query(rolessql, (err, result) => {
         if (err) { console.log(err); }
         let array = JSON.parse(JSON.stringify(result));
@@ -52,11 +54,11 @@ const prompts = () => {
             type: 'list',
             name: 'allOptions',
             message: `What would you like to do?`,
-            choices: ['View All Employees', 'Add Employee', `Update Employee Role`, `View All Roles`, `Add Role`, `View All Departments`, `Add Department`, `Quit`],
+            choices: ['View All Employees', 'Add Employee', `Update Employee`, `View All Roles`, `Add Role`, `View All Departments`, `Add Department`, `Quit`],
         }
     ])
-        .then((answer) => {
-            switch (answer.allOptions) {
+        .then((answers) => {
+            switch (answers.allOptions) {
                 case 'View All Employees':
                     const viewAllEmpsql = `SELECT
                     employee.id,
@@ -79,7 +81,7 @@ const prompts = () => {
                         console.table(result);
                         prompts();
                     })
-                    
+
                     break;
                 case 'Add Employee':
                     var roles = getRoles();
@@ -121,14 +123,63 @@ const prompts = () => {
                             })
                         })
                     break;
-                case 'Update Employee Role':
-                    const updateEmpRolesql = `INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-                    VALUES (${id}, ${first_name}, ${last_name}, ${role_id}, ${manager_id});
-                    `;
-                    db.query(updateEmpRolesql, (err, result) => {
-                        if (err) { console.log(err); }
-                        console.table(result);
-                    })
+                case 'Update Employee':
+                    inquirer.prompt([
+                        {
+                            type: 'input',
+                            name: 'emp_id',
+                            message: `To update an employee, enter their employee ID`
+                        },
+                        {
+                            type: 'list',
+                            name: 'role_or_manager',
+                            message: `Update role or update manager?`,
+                            choices: ['Role', 'Manager']
+                        },
+                    ])
+                        .then((answers) => {
+                            var emp_id = answers.emp_id;
+                            switch (answers.role_or_manager) {
+                                case 'Role':
+                                    inquirer.prompt([
+                                        {
+                                            type: 'input',
+                                            name: 'role',
+                                            message: `Enter new role ID`
+                                        },
+                                    ])
+                                        .then((answers) => {
+
+                                            const updateRolesql = `UPDATE employee
+                                        SET role_id = ${answers.role}
+                                        WHERE id = ${emp_id}`;
+                                            db.query(updateRolesql, (err, result) => {
+                                                if (err) { console.log(err); }
+                                                console.table(result);
+                                                prompts();
+                                            })
+                                        })
+
+                                case 'Manager':
+                                    inquirer.prompt([
+                                        {
+                                            type: 'input',
+                                            name: 'manager',
+                                            message: `Enter new manager ID`
+                                        },
+                                    ])
+                                        .then((answers) => {
+                                            const updateManagersql = `UPDATE employee
+                                            SET manager_id = ${answers.manager}
+                                            WHERE id = ${emp_id}`;
+                                            db.query(updateManagersql, (err, result) => {
+                                                if (err) { console.log(err); }
+                                                console.table(result);
+                                                prompts();
+                                            })
+                                        })
+                            }
+                        })
                     break;
                 case 'View All Roles':
                     const viewAllRolesql = `SELECT
