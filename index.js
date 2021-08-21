@@ -105,20 +105,7 @@ const prompts = () => {
                     updateEmployee();
                     break;
                 case 'View All Roles':
-                    const viewAllRolesql = `SELECT
-    roles.id,
-    roles.role_title AS role,
-    roles.role_salary AS salary,
-    department.department_id,
-    department.department_name AS department
-    FROM roles
-    JOIN department
-    ON roles.department_id = department.id
-    `;
-                    db.query(viewAllRolesql, (err, result) => {
-                        if (err) { console.log(err); }
-                        console.table(result);
-                    })
+                    viewAllRoles();
                     break;
                 case 'Add Role':
                     const addRolesql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
@@ -292,6 +279,24 @@ const updateEmployee = async () => {
                 prompts();
             })
     }
+}
+
+const viewAllRoles = async () => {
+    const viewAllRolesql = `SELECT
+    roles.id,
+    roles.role_title AS role,
+    roles.role_salary AS salary,
+    roles.department_id,
+    department.department_name AS department
+    FROM roles
+    JOIN department
+    ON roles.department_id = department.id
+`;
+    db.query(viewAllRolesql, (err, result) => {
+        if (err) { console.log(err); }
+        console.table(result);
+        prompts();
+    })
 }
 const init = () => {
     prompts();
