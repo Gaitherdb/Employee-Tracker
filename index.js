@@ -14,37 +14,37 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the employees_db database.`)
 );
-const getManagers = () => {
-    var managerssql = `SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS Manager
+const getManagers = async () => {
+    var managerssql = `SELECT DISTINCT m.id, CONCAT(m.first_name, ' ', m.last_name) AS Manager
     FROM employee
-    LEFT JOIN employee manager
-    ON employee.manager_id = manager.id
+    LEFT JOIN employee m
+    ON employee.manager_id = m.id
     WHERE employee.manager_id IS NOT NULL`;
-    db.query(managerssql, (err, result) => {
-        if (err) { console.log(err); }
-        console.log(result)
-        console.log(typeof result)
-        let array = JSON.stringify(result);
-        console.log(array)
-        console.log("parse")
-        let parse = JSON.parse(array);
-        console.log(parse)
-        console.log(typeof parse)
-        console.log(Object.values(parse))
-
-
-        return
-    })
+    var result = await db.promise().query(managerssql);
+    let array = JSON.stringify(result[0]);
+    let parse = JSON.parse(array);
+    var managers = [];
+    for (i = 0; i < parse.length; i++) {
+        let temp = parse[i].Manager;
+        var manager = { key: JSON.stringify(parse[i].id), value: temp }
+        managers.push(manager)
+    }
+    return managers;
 }
 
-const getRoles = () => {
-    var rolessql = `SELECT role_id FROM roles`;
-    db.query(rolessql, (err, result) => {
-        if (err) { console.log(err); }
-        let array = JSON.parse(JSON.stringify(result));
-        console.log(array);
-        return result;
-    })
+const getRoles = async () => {
+    var rolessql = `SELECT id, role_title
+     FROM roles`;
+    var result = await db.promise().query(rolessql);
+    let array = JSON.stringify(result[0]);
+    let parse = JSON.parse(array);
+    var roles = [];
+    for (i = 0; i < parse.length; i++) {
+        let temp = parse[i].role_title;
+        var role = { key: JSON.stringify(parse[i].id), value: temp }
+        roles.push(role)
+    }
+    return roles;
 }
 //Initial & total view of options 
 const prompts = () => {
@@ -84,46 +84,55 @@ const prompts = () => {
 
                     break;
                 case 'Add Employee':
-                    var roles = getRoles();
-                    var managers = getManagers();
-                    console.log(managers);
-                    console.log(roles);
-                    inquirer.prompt([
-                        {
-                            type: 'input',
-                            name: 'first_name',
-                            message: `What is the employee's first name?`,
-                        },
-                        {
-                            type: 'input',
-                            name: 'last_name',
-                            message: `What is the employee's last name?`,
-                        },
-                        {
-                            type: 'list',
-                            name: 'role',
-                            message: `What is the employee's role?`,
-                            choices: [roles],
-                        },
-                        {
-                            type: 'list',
-                            name: 'manager',
-                            message: `Who is this employee's manager?`,
-                            choices: [managers],
-                        },
-                    ])
-                        .then((answers) => {
-                            const addEmpsql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-                            VALUES (${answers.first_name}, ${answers.last_name}, ${answers.role_id}, ${answers.manager_id});
+
+                    const addEmployee = async () => {
+                        var managers = await getManagers();
+                        var roles = await getRoles();
+                        console.log(managers);
+                        console.log(roles);
+                        
+
+                        let addEmpPrompt = await inquirer.prompt([
+                            {
+                                type: 'input',
+                                name: 'first_name',
+                                message: `What is the employee's first name?`,
+                            },
+                            {
+                                type: 'input',
+                                name: 'last_name',
+                                message: `What is the employee's last name?`,
+                            },
+                            {
+                                type: 'expand',
+                                name: 'role',
+                                message: `What is the employee's role?`,
+                                choices: roles,
+                            },
+                            {
+                                type: 'expand',
+                                name: 'manager',
+                                message: `Who is this employee's manager?`,
+                                choices: managers,
+                            },
+                        ])
+                        console.log(addEmpPrompt.manager.key)
+                        // if (managers.)
+                        // var manNametoID = managers addEmpPrompt.manager
+                        const addEmpsql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                            VALUES (${addEmpPrompt.first_name}, ${addEmpPrompt.last_name}, ${addEmpPrompt.role}, ${addEmpPrompt.manager});
                             `;
-                            db.query(addEmpsql, (err, result) => {
-                                if (err) { console.log(err); }
-                                prompt();
-                                console.table(result);
-                            })
+                        db.query(addEmpsql, (err, result) => {
+                            if (err) { console.log(err); }
+                            console.table(result);
+                            prompts();
                         })
+
+                    }
+                    addEmployee();
                     break;
                 case 'Update Employee':
+                    //Gets employee ID to alter their role or manager
                     inquirer.prompt([
                         {
                             type: 'input',
