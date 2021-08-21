@@ -14,6 +14,7 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the employees_db database.`)
 )
+//returns name and manager_id of managers as an array of objects with manager_id as key, and first&last name as value
 const getManagers = async () => {
     var managerssql = `SELECT DISTINCT m.id, CONCAT(m.first_name, ' ', m.last_name) AS Manager
     FROM employee
@@ -31,6 +32,7 @@ const getManagers = async () => {
     }
     return managers;
 }
+//returns role id & title as an array of objects with id as key and title as value
 const getRoles = async () => {
     var rolessql = `SELECT id, role_title
      FROM roles`;
@@ -45,6 +47,7 @@ const getRoles = async () => {
     }
     return roles;
 }
+//returns first & last name of employees as an array of objects with id as key, and name as value
 const getEmployees = async () => {
     var empsql = `SELECT DISTINCT id, CONCAT(first_name, ' ', last_name) AS Name
      FROM employee`;
@@ -59,6 +62,7 @@ const getEmployees = async () => {
     }
     return emps;
 }
+//returns id and name of departments as an array of objects with id as key, and name as value
 const getDepartment = async () => {
     var depsql = `SELECT id, department_name AS Name
      FROM department`;
@@ -85,8 +89,8 @@ const prompts = () => {
             choices: ['View All Employees', 'Add Employee', `Update Employee`, `View All Roles`, `Add Role`, `View All Departments`, `Add Department`, `Quit`],
         }
     ])
-        .then((answers) => {
-            switch (answers.allOptions) {
+        .then((answer) => {
+            switch (answer.allOptions) {
                 case 'View All Employees':
                     viewAllEmployees();
                     break;
@@ -114,6 +118,7 @@ const prompts = () => {
             }
         })
 };
+//displays a new table formed joining all tables to display all empployees
 const viewAllEmployees = () => {
     const viewAllEmpsql = `SELECT
     employee.id,
@@ -122,14 +127,14 @@ const viewAllEmployees = () => {
     department.department_name AS department,
     roles.role_title AS role,
     roles.role_salary AS salary,
-    CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+    CONCAT(alias_manager.first_name, ' ', alias_manager.last_name) AS manager
     FROM employee
     JOIN roles
     ON employee.role_id = roles.id
     JOIN department
     ON roles.department_id = department.id
-    LEFT JOIN employee manager
-    ON employee.manager_id = manager.id
+    LEFT JOIN employee alias_manager
+    ON employee.manager_id = alias_manager.id
 `;
     db.query(viewAllEmpsql, (err, result) => {
         if (err) { console.log(err); }
@@ -138,6 +143,7 @@ const viewAllEmployees = () => {
     })
 
 }
+//prompts input for neccesary data to create new employees
 const addEmployee = async () => {
     //gets all manager names and ids
     var managers = await getManagers();
@@ -191,10 +197,10 @@ const addEmployee = async () => {
     })
 
 }
-
+//prompts input to update current employee data
 const updateEmployee = async () => {
+    //returns array containing name and id of every employee to select from in prompt
     var Employees = await getEmployees();
-    //Gets employee ID to alter their role or manager
     var updateEmpPrompt = await inquirer.prompt([
         {
             type: 'expand',
@@ -209,13 +215,16 @@ const updateEmployee = async () => {
             choices: ['Role', 'Manager'],
         },
     ])
+    //converts employee name selected and converts to corresponding id
     for (i = 0; i < Employees.length; i++) {
         if (updateEmpPrompt.emp_id === Employees[i].value) {
             var emp_id = Employees[i].key;
         }
     }
+    //if prompt choice was role OR manager
     switch (updateEmpPrompt.role_or_manager) {
         case 'Role':
+            //returns role id & title as an array of objects with id as key and title as value
             var roles = await getRoles();
             var updateRole = await inquirer.prompt([
                 {
@@ -225,12 +234,13 @@ const updateEmployee = async () => {
                     choices: roles,
                 },
             ])
-            //converts name of employee selected to corresponding employee id
+            //converts name of role selected to corresponding role id
             for (i = 0; i < roles.length; i++) {
                 if (updateRole.role === roles[i].value) {
                     var role_id = roles[i].key;
                 }
             }
+            //update employee role for employee with selected ID
             const updateRolesql = `UPDATE employee
                     SET role_id = ${role_id}
                     WHERE id = ${emp_id}`;
@@ -241,6 +251,7 @@ const updateEmployee = async () => {
             })
 
         case 'Manager':
+            //returns manager id & name as an array of objects with id as key and name as value
             var managers = await getManagers();
             var updateManager = await inquirer.prompt([
                 {
@@ -256,6 +267,7 @@ const updateEmployee = async () => {
                     var manager_id = managers[i].key;
                 }
             }
+             //update employee's manager for employee with selected ID
             const updateManagersql = `UPDATE employee
                         SET manager_id = ${manager_id}
                         WHERE id = ${emp_id}`;
@@ -266,7 +278,7 @@ const updateEmployee = async () => {
             })
     }
 }
-
+//displays a table with all exisiting roles joined with department table
 const viewAllRoles = () => {
     const viewAllRolesql = `SELECT
     roles.id,
@@ -284,8 +296,9 @@ const viewAllRoles = () => {
         prompts();
     })
 }
-
+//prompts input to add a new role
 const addRoles = async () => {
+    //returns id and name of departments as an array of objects with id as key, and name as value
     var departments = await getDepartment();
     let addRolePrompt = await inquirer.prompt([
         {
@@ -305,11 +318,13 @@ const addRoles = async () => {
             choices: departments,
         },
     ])
+     //converts department name selected and converts to corresponding id
     for (i = 0; i < departments.length; i++) {
         if (addRolePrompt.department === departments[i].value) {
             var department_id = departments[i].key;
         }
     }
+    //add roles data into database
     const addRolesql = `INSERT INTO roles (role_title, role_salary, department_id)
     VALUES ("${addRolePrompt.title}", ${addRolePrompt.salary}, ${department_id});
     `;
@@ -319,6 +334,7 @@ const addRoles = async () => {
         prompts();
     })
 }
+//displays a table with all exisiting departments
 const viewAllDepartments = () => {
     const viewAllDepsql = `SELECT 
     department.id,
@@ -331,6 +347,7 @@ const viewAllDepartments = () => {
         prompts();
     })
 }
+//prompts input to add a new department
 const addDepartment = async () => {
     let addDepartmentPrompt = await inquirer.prompt([
         {
@@ -339,6 +356,7 @@ const addDepartment = async () => {
             message: `What is the name of the deparment?`,
         },
     ])
+    //add department data into database
     const addDepsql = `INSERT INTO department (department_name)
                 VALUES ("${addDepartmentPrompt.department_name}");
                 `;
@@ -349,11 +367,8 @@ const addDepartment = async () => {
     })
 
 }
-const init = () => {
-    prompts();
-};
 
-init();
+prompts();
 
 
 
