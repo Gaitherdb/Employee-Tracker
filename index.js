@@ -60,6 +60,21 @@ const getEmployees = async () => {
     }
     return emps;
 }
+const getDepartment = async () => {
+    var depsql = `SELECT id, department_name AS Name
+     FROM department`;
+    var result = await db.promise().query(depsql);
+    let array = JSON.stringify(result[0]);
+    let parse = JSON.parse(array);
+    var deps = [];
+    for (i = 0; i < parse.length; i++) {
+        let temp = parse[i].Name;
+        var dep = { key: JSON.stringify(parse[i].id), value: temp }
+        deps.push(dep)
+    }
+    console.log(deps);
+    return deps;
+}
 //Initial & total view of options 
 const prompts = () => {
 
@@ -101,20 +116,13 @@ const prompts = () => {
                     addEmployee();
                     break;
                 case 'Update Employee':
-
                     updateEmployee();
                     break;
                 case 'View All Roles':
                     viewAllRoles();
                     break;
                 case 'Add Role':
-                    const addRolesql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-    VALUES (${first_name}, ${last_name}, ${role_id}, ${manager_id});
-    `;
-                    db.query(addRolesql, (err, result) => {
-                        if (err) { console.log(err); }
-                        console.table(result);
-                    })
+                    addRoles();
                     break;
                 case 'View All Departments':
                     const viewAllDepsql = `SELECT 
@@ -297,6 +305,41 @@ const viewAllRoles = async () => {
         console.table(result);
         prompts();
     })
+}
+
+const addRoles = async () => {
+    var departments = await getDepartment();
+    let addRolePrompt = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'title',
+            message: `What is the title of the role?`,
+        },
+        {
+            type: 'input',
+            name: 'salary',
+            message: `What is the salary for this role?`,
+        },
+        {
+            type: 'expand',
+            name: 'department',
+            message: `What is department for this role? Enter h for options.`,
+            choices: departments,
+        },
+    ])
+    for (i = 0; i < departments.length; i++) {
+        if (addRolePrompt.department === departments[i].value) {
+            var department_id = departments[i].key;
+        }
+    }
+    const addRolesql = `INSERT INTO roles (role_title, role_salary, department_id)
+    VALUES ("${addRolePrompt.title}", ${addRolePrompt.salary}, ${department_id});
+    `;
+                    db.query(addRolesql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.table(result);
+                        prompts();
+                    })
 }
 const init = () => {
     prompts();
