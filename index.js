@@ -13,7 +13,7 @@ const db = mysql.createConnection(
         database: 'employees_db'
     },
     console.log(`Connected to the employees_db database.`)
-);
+)
 const getManagers = async () => {
     var managerssql = `SELECT DISTINCT m.id, CONCAT(m.first_name, ' ', m.last_name) AS Manager
     FROM employee
@@ -31,7 +31,6 @@ const getManagers = async () => {
     }
     return managers;
 }
-
 const getRoles = async () => {
     var rolessql = `SELECT id, role_title
      FROM roles`;
@@ -125,15 +124,7 @@ const prompts = () => {
                     addRoles();
                     break;
                 case 'View All Departments':
-                    const viewAllDepsql = `SELECT 
-                    department.id,
-                    department.department_name AS department
-                    FROM department
-                    `;
-                    db.query(viewAllDepsql, (err, result) => {
-                        if (err) { console.log(err); }
-                        console.table(result);
-                    })
+                    viewAllDepartments();
                     break;
                 case 'Add Department':
                     inquirer.prompt([
@@ -340,6 +331,18 @@ const addRoles = async () => {
                         console.table(result);
                         prompts();
                     })
+}
+const viewAllDepartments = async () => {
+    const viewAllDepsql = `SELECT 
+    department.id,
+    department.department_name AS department
+    FROM department
+    `;
+    db.query(viewAllDepsql, (err, result) => {
+        if (err) { console.log(err); }
+        console.table(result);
+        prompts();
+    })
 }
 const init = () => {
     prompts();
