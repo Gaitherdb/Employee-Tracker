@@ -75,7 +75,6 @@ const getDepartment = async () => {
         var dep = { key: JSON.stringify(parse[i].id), value: temp }
         deps.push(dep)
     }
-    console.log(deps);
     return deps;
 }
 //Initial & total view of options 
@@ -192,7 +191,7 @@ const addEmployee = async () => {
         `;
     db.query(addEmpsql, (err, result) => {
         if (err) { console.log(err); }
-        console.table(result);
+        console.log("Added new employee.")
         prompts();
     })
 
@@ -246,10 +245,10 @@ const updateEmployee = async () => {
                     WHERE id = ${emp_id}`;
             db.query(updateRolesql, (err, result) => {
                 if (err) { console.log(err); }
-                console.table(result);
+                console.log("Updated employee.")
                 prompts();
             })
-
+            break;
         case 'Manager':
             //returns manager id & name as an array of objects with id as key and name as value
             var managers = await getManagers();
@@ -273,9 +272,10 @@ const updateEmployee = async () => {
                         WHERE id = ${emp_id}`;
             db.query(updateManagersql, (err, result) => {
                 if (err) { console.log(err); }
-                console.table(result);
+                console.log("Updated employee.")
                 prompts();
             })
+            break;
     }
 }
 //displays a table with all exisiting roles joined with department table
@@ -330,7 +330,7 @@ const addRoles = async () => {
     `;
     db.query(addRolesql, (err, result) => {
         if (err) { console.log(err); }
-        console.table(result);
+        console.log("Added new role.")
         prompts();
     })
 }
@@ -362,7 +362,7 @@ const addDepartment = async () => {
                 `;
     db.query(addDepsql, (err, result) => {
         if (err) { console.log(err); }
-        console.table(result);
+        console.log("Added new department.")
         prompts();
     })
 
