@@ -14,7 +14,7 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the employees_db database.`)
 )
-//returns name and manager_id of managers as an array of objects with manager_id as key, and first&last name as value
+//returns name and manager_id of managers as an array of objects with manager_id as key, and name as value
 const getManagers = async () => {
     var managerssql = `SELECT DISTINCT m.id, CONCAT(m.first_name, ' ', m.last_name) AS Manager
     FROM employee
