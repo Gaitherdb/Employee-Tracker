@@ -46,6 +46,20 @@ const getRoles = async () => {
     }
     return roles;
 }
+const getEmployees = async () => {
+    var empsql = `SELECT DISTINCT id, CONCAT(first_name, ' ', last_name) AS Name
+     FROM employee`;
+    var result = await db.promise().query(empsql);
+    let array = JSON.stringify(result[0]);
+    let parse = JSON.parse(array);
+    var emps = [];
+    for (i = 0; i < parse.length; i++) {
+        let temp = parse[i].Name;
+        var emp = { key: JSON.stringify(parse[i].id), value: temp }
+        emps.push(emp)
+    }
+    return emps;
+}
 //Initial & total view of options 
 const prompts = () => {
 
@@ -84,120 +98,11 @@ const prompts = () => {
 
                     break;
                 case 'Add Employee':
-
-                    const addEmployee = async () => {
-                        //gets all manager names and ids
-                        var managers = await getManagers();
-                        //gets all roles and ids
-                        var roles = await getRoles();
-                        
-                        let addEmpPrompt = await inquirer.prompt([
-                            {
-                                type: 'input',
-                                name: 'first_name',
-                                message: `What is the employee's first name?`,
-                            },
-                            {
-                                type: 'input',
-                                name: 'last_name',
-                                message: `What is the employee's last name?`,
-                            },
-                            {
-                                type: 'expand',
-                                name: 'role',
-                                message: `What is the employee's role ID? Press H and then enter for options.`,
-                                choices: roles,
-                            },
-                            {
-                                type: 'expand',
-                                name: 'manager',
-                                message: `Enter the employee's manager's ID Press H and then enter for options.`,
-                                choices: managers,
-                            },
-                        ])
-                        //converts name of role selected to corresponding role id
-                        for (i=0; i<roles.length; i++){
-                            if (addEmpPrompt.role === roles[i].value){
-                                var role_id = roles[i].key;
-                            }
-                        }
-                        //converts manager name selected and converts to corresponding manager id
-                        for (i=0; i<managers.length; i++){
-                            if (addEmpPrompt.manager === managers[i].value){
-                                var manager_id = managers[i].key;
-                            }
-                        }
-                        //adds employee data into database
-                        const addEmpsql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-                            VALUES ("${addEmpPrompt.first_name}", "${addEmpPrompt.last_name}", ${role_id}, ${manager_id});
-                            `;
-                        db.query(addEmpsql, (err, result) => {
-                            if (err) { console.log(err); }
-                            console.table(result);
-                            prompts();
-                        })
-
-                    }
                     addEmployee();
                     break;
                 case 'Update Employee':
-                    //Gets employee ID to alter their role or manager
-                    inquirer.prompt([
-                        {
-                            type: 'input',
-                            name: 'emp_id',
-                            message: `To update an employee, enter their employee ID`
-                        },
-                        {
-                            type: 'list',
-                            name: 'role_or_manager',
-                            message: `Update role or update manager?`,
-                            choices: ['Role', 'Manager']
-                        },
-                    ])
-                        .then((answers) => {
-                            var emp_id = answers.emp_id;
-                            switch (answers.role_or_manager) {
-                                case 'Role':
-                                    inquirer.prompt([
-                                        {
-                                            type: 'input',
-                                            name: 'role',
-                                            message: `Enter new role ID`
-                                        },
-                                    ])
-                                        .then((answers) => {
 
-                                            const updateRolesql = `UPDATE employee
-                                        SET role_id = ${answers.role}
-                                        WHERE id = ${emp_id}`;
-                                            db.query(updateRolesql, (err, result) => {
-                                                if (err) { console.log(err); }
-                                                console.table(result);
-                                                prompts();
-                                            })
-                                        })
-
-                                case 'Manager':
-                                    inquirer.prompt([
-                                        {
-                                            type: 'input',
-                                            name: 'manager',
-                                            message: `Enter new manager ID`
-                                        },
-                                    ])
-                                        .then((answers) => {
-                                            const updateManagersql = `UPDATE employee
-                                            SET manager_id = ${answers.manager}
-                                            WHERE id = ${emp_id}`;
-                                            db.query(updateManagersql, (err, result) => {
-                                                if (err) { console.log(err); }
-                                                console.table(result);
-                                                prompts();
-                                            })
-                                        })
-                            }
-                        })
+                    updateEmployee();
                     break;
                 case 'View All Roles':
                     const viewAllRolesql = `SELECT
@@ -260,6 +165,134 @@ const prompts = () => {
         })
 };
 
+const addEmployee = async () => {
+    //gets all manager names and ids
+    var managers = await getManagers();
+    //gets all roles and ids
+    var roles = await getRoles();
+
+    let addEmpPrompt = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'first_name',
+            message: `What is the employee's first name?`,
+        },
+        {
+            type: 'input',
+            name: 'last_name',
+            message: `What is the employee's last name?`,
+        },
+        {
+            type: 'expand',
+            name: 'role',
+            message: `What is the employee's role ID? Enter h for options.`,
+            choices: roles,
+        },
+        {
+            type: 'expand',
+            name: 'manager',
+            message: `Enter the employee's manager's ID Enter h for options.`,
+            choices: managers,
+        },
+    ])
+    //converts name of role selected to corresponding role id
+    for (i = 0; i < roles.length; i++) {
+        if (addEmpPrompt.role === roles[i].value) {
+            var role_id = roles[i].key;
+        }
+    }
+    //converts manager name selected and converts to corresponding manager id
+    for (i = 0; i < managers.length; i++) {
+        if (addEmpPrompt.manager === managers[i].value) {
+            var manager_id = managers[i].key;
+        }
+    }
+    //adds employee data into database
+    const addEmpsql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+        VALUES ("${addEmpPrompt.first_name}", "${addEmpPrompt.last_name}", ${role_id}, ${manager_id});
+        `;
+    db.query(addEmpsql, (err, result) => {
+        if (err) { console.log(err); }
+        console.table(result);
+        prompts();
+    })
+
+}
+
+const updateEmployee = async () => {
+    var Employees = await getEmployees();
+    //Gets employee ID to alter their role or manager
+    var updateEmpPrompt = await inquirer.prompt([
+        {
+            type: 'expand',
+            name: 'emp_id',
+            message: `To update an employee, enter their employee ID. Enter h for options.`,
+            choices: Employees,
+        },
+        {
+            type: 'list',
+            name: 'role_or_manager',
+            message: `Update role or update manager?`,
+            choices: ['Role', 'Manager'],
+        },
+    ])
+    for (i = 0; i < Employees.length; i++) {
+        if (updateEmpPrompt.emp_id === Employees[i].value) {
+            var emp_id = Employees[i].key;
+        }
+    }
+    switch (updateEmpPrompt.role_or_manager) {
+        case 'Role':
+            var roles = await getRoles();
+            var updateRole = await inquirer.prompt([
+                {
+                    type: 'expand',
+                    name: 'role',
+                    message: `Enter new role ID. Enter h for options.`,
+                    choices: roles,
+                },
+            ])
+            //converts name of employee selected to corresponding employee id
+            for (i = 0; i < roles.length; i++) {
+                if (updateRole.role === roles[i].value) {
+                    var role_id = roles[i].key;
+                }
+            }
+            const updateRolesql = `UPDATE employee
+                    SET role_id = ${role_id}
+                    WHERE id = ${emp_id}`;
+            db.query(updateRolesql, (err, result) => {
+                if (err) { console.log(err); }
+                console.table(result);
+                prompts();
+            })
+
+        case 'Manager':
+            var managers = await getManagers();
+            var updateManager = await inquirer.prompt([
+                {
+                    type: 'expand',
+                    name: 'manager',
+                    message: `Enter new manager ID. Enter 'h' for options.`,
+                    choices: managers,
+                },
+            ])
+            //converts manager name selected and converts to corresponding manager id
+            for (i = 0; i < managers.length; i++) {
+                if (updateManager.manager === managers[i].value) {
+                    var manager_id = managers[i].key;
+                }
+            }
+            const updateManagersql = `UPDATE employee
+                        SET manager_id = ${manager_id}
+                        WHERE id = ${emp_id}`;
+            db.query(updateManagersql, (err, result) => {
+                if (err) { console.log(err); }
+                console.table(result);
+                prompts();
+            })
+    }
+}
 const init = () => {
     prompts();
 };
