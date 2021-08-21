@@ -86,12 +86,11 @@ const prompts = () => {
                 case 'Add Employee':
 
                     const addEmployee = async () => {
+                        //gets all manager names and ids
                         var managers = await getManagers();
+                        //gets all roles and ids
                         var roles = await getRoles();
-                        console.log(managers);
-                        console.log(roles);
                         
-
                         let addEmpPrompt = await inquirer.prompt([
                             {
                                 type: 'input',
@@ -106,21 +105,31 @@ const prompts = () => {
                             {
                                 type: 'expand',
                                 name: 'role',
-                                message: `What is the employee's role?`,
+                                message: `What is the employee's role ID? Press H and then enter for options.`,
                                 choices: roles,
                             },
                             {
                                 type: 'expand',
                                 name: 'manager',
-                                message: `Who is this employee's manager?`,
+                                message: `Enter the employee's manager's ID Press H and then enter for options.`,
                                 choices: managers,
                             },
                         ])
-                        console.log(addEmpPrompt.manager.key)
-                        // if (managers.)
-                        // var manNametoID = managers addEmpPrompt.manager
+                        //converts name of role selected to corresponding role id
+                        for (i=0; i<roles.length; i++){
+                            if (addEmpPrompt.role === roles[i].value){
+                                var role_id = roles[i].key;
+                            }
+                        }
+                        //converts manager name selected and converts to corresponding manager id
+                        for (i=0; i<managers.length; i++){
+                            if (addEmpPrompt.manager === managers[i].value){
+                                var manager_id = managers[i].key;
+                            }
+                        }
+                        //adds employee data into database
                         const addEmpsql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-                            VALUES (${addEmpPrompt.first_name}, ${addEmpPrompt.last_name}, ${addEmpPrompt.role}, ${addEmpPrompt.manager});
+                            VALUES ("${addEmpPrompt.first_name}", "${addEmpPrompt.last_name}", ${role_id}, ${manager_id});
                             `;
                         db.query(addEmpsql, (err, result) => {
                             if (err) { console.log(err); }
