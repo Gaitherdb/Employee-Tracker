@@ -88,28 +88,7 @@ const prompts = () => {
         .then((answers) => {
             switch (answers.allOptions) {
                 case 'View All Employees':
-                    const viewAllEmpsql = `SELECT
-                    employee.id,
-                    employee.first_name,
-                    employee.last_name,
-                    department.department_name AS department,
-                    roles.role_title AS role,
-                    roles.role_salary AS salary,
-                    CONCAT(manager.first_name, ' ', manager.last_name) AS manager
-                    FROM employee
-                    JOIN roles
-                    ON employee.role_id = roles.id
-                    JOIN department
-                    ON roles.department_id = department.id
-                    LEFT JOIN employee manager
-                    ON employee.manager_id = manager.id
-`;
-                    db.query(viewAllEmpsql, (err, result) => {
-                        if (err) { console.log(err); }
-                        console.table(result);
-                        prompts();
-                    })
-
+                    viewAllEmployees();
                     break;
                 case 'Add Employee':
                     addEmployee();
@@ -127,30 +106,38 @@ const prompts = () => {
                     viewAllDepartments();
                     break;
                 case 'Add Department':
-                    inquirer.prompt([
-                        {
-                            type: 'input',
-                            name: 'department_name',
-                            message: `What is the name of the deparment?`,
-                        },
-                    ])
-                        .then((answers) => {
-                            const addDepsql = `INSERT INTO department (department_name)
-                                VALUES (${answers.department_name});
-                                `;
-                            db.query(addDepsql, (err, result) => {
-                                if (err) { console.log(err); }
-                                console.table(result);
-                            })
-                        })
+                    addDepartment();
                     break;
                 default:
-                    console.log("Ended CMS")
+                    console.log("Press Ctrl C to Quit")
                     break;
             }
         })
 };
+const viewAllEmployees = () => {
+    const viewAllEmpsql = `SELECT
+    employee.id,
+    employee.first_name,
+    employee.last_name,
+    department.department_name AS department,
+    roles.role_title AS role,
+    roles.role_salary AS salary,
+    CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+    FROM employee
+    JOIN roles
+    ON employee.role_id = roles.id
+    JOIN department
+    ON roles.department_id = department.id
+    LEFT JOIN employee manager
+    ON employee.manager_id = manager.id
+`;
+    db.query(viewAllEmpsql, (err, result) => {
+        if (err) { console.log(err); }
+        console.table(result);
+        prompts();
+    })
 
+}
 const addEmployee = async () => {
     //gets all manager names and ids
     var managers = await getManagers();
@@ -280,7 +267,7 @@ const updateEmployee = async () => {
     }
 }
 
-const viewAllRoles = async () => {
+const viewAllRoles = () => {
     const viewAllRolesql = `SELECT
     roles.id,
     roles.role_title AS role,
@@ -326,13 +313,13 @@ const addRoles = async () => {
     const addRolesql = `INSERT INTO roles (role_title, role_salary, department_id)
     VALUES ("${addRolePrompt.title}", ${addRolePrompt.salary}, ${department_id});
     `;
-                    db.query(addRolesql, (err, result) => {
-                        if (err) { console.log(err); }
-                        console.table(result);
-                        prompts();
-                    })
+    db.query(addRolesql, (err, result) => {
+        if (err) { console.log(err); }
+        console.table(result);
+        prompts();
+    })
 }
-const viewAllDepartments = async () => {
+const viewAllDepartments = () => {
     const viewAllDepsql = `SELECT 
     department.id,
     department.department_name AS department
@@ -343,6 +330,24 @@ const viewAllDepartments = async () => {
         console.table(result);
         prompts();
     })
+}
+const addDepartment = async () => {
+    let addDepartmentPrompt = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'department_name',
+            message: `What is the name of the deparment?`,
+        },
+    ])
+    const addDepsql = `INSERT INTO department (department_name)
+                VALUES ("${addDepartmentPrompt.department_name}");
+                `;
+    db.query(addDepsql, (err, result) => {
+        if (err) { console.log(err); }
+        console.table(result);
+        prompts();
+    })
+
 }
 const init = () => {
     prompts();

@@ -1,4 +1,4 @@
-SELECT
+SELECT 
         employee.id,
         employee.first_name,
         employee.last_name,
@@ -12,4 +12,8 @@ SELECT
         JOIN department
         ON roles.department_id = department.id
         LEFT JOIN employee m
-        ON employee.manager_id = m.id
+        ON employee.manager_id = m.id;
+
+-- SELECT * FROM employee;
+-- SELECT * FROM roles;
+-- SELECT * FROM department;
