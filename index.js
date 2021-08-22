@@ -377,8 +377,7 @@ const addRoles = async () => {
 //displays a table with all exisiting departments
 const viewAllDepartments = () => {
     const viewAllDepsql = `
-    SELECT 
-    department.id,
+    SELECT DISTINCT
     department.department_name AS Departments
     FROM department
     `;
