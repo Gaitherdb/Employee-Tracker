@@ -27,7 +27,7 @@ const getManagers = async () => {
     var managers = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].Manager;
-        var manager = { key: JSON.stringify(parse[i].id), value: temp }
+        var manager = { name: temp , value: JSON.stringify(parse[i].id)}
         managers.push(manager)
     }
     return managers;
@@ -42,9 +42,10 @@ const getRoles = async () => {
     var roles = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].role_title;
-        var role = { key: JSON.stringify(parse[i].id), value: temp }
+        var role = { name: temp, value: JSON.stringify(parse[i].id) }
         roles.push(role)
     }
+    console.log(roles);
     return roles;
 }
 //returns first & last name of employees as an array of objects with id as key, and name as value
@@ -57,7 +58,7 @@ const getEmployees = async () => {
     var emps = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].Name;
-        var emp = { name: temp, value: JSON.stringify(parse[i].id)}
+        var emp = { name: temp, value: JSON.stringify(parse[i].id) }
         emps.push(emp)
     }
     return emps;
@@ -72,7 +73,7 @@ const getDepartment = async () => {
     var deps = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].Name;
-        var dep = { key: JSON.stringify(parse[i].id), value: temp }
+        var dep = { name: temp, value: JSON.stringify(parse[i].id)}
         deps.push(dep)
     }
     return deps;
@@ -117,30 +118,98 @@ const prompts = () => {
             }
         })
 };
-//displays a new table formed joining all tables to display all empployees
-const viewAllEmployees = () => {
-    const viewAllEmpsql = `SELECT
-    employee.id,
-    employee.first_name,
-    employee.last_name,
-    department.department_name AS department,
-    roles.role_title AS role,
-    roles.role_salary AS salary,
-    CONCAT(alias_manager.first_name, ' ', alias_manager.last_name) AS manager
-    FROM employee
-    JOIN roles
-    ON employee.role_id = roles.id
-    JOIN department
-    ON roles.department_id = department.id
-    LEFT JOIN employee alias_manager
-    ON employee.manager_id = alias_manager.id
+//displays a new table formed joining all tables to display all employees
+const viewAllEmployees = async () => {
+    let viewTypes = await inquirer.prompt([
+        {
+            type: 'list',
+            name: 'view_type',
+            message: `How would you like to view employees by?`,
+            choices: ['ID', 'Manager', 'Department'],
+        },
+    ])
+    switch (viewTypes.view_type) {
+        case 'ID':
+            const viewbyIDsql = `
+            SELECT
+            employee.id,
+            employee.first_name,
+            employee.last_name,
+            department.department_name AS department,
+            roles.role_title AS role,
+            roles.role_salary AS salary,
+            CONCAT(alias_manager.first_name, ' ', alias_manager.last_name) AS manager
+            FROM employee
+            JOIN roles
+            ON employee.role_id = roles.id
+            JOIN department
+            ON roles.department_id = department.id
+            LEFT JOIN employee alias_manager
+            ON employee.manager_id = alias_manager.id
+            ORDER BY
+            employee.id
 `;
-    db.query(viewAllEmpsql, (err, result) => {
-        if (err) { console.log(err); }
-        console.table(result);
-        prompts();
-    })
+            db.query(viewbyIDsql, (err, result) => {
+                if (err) { console.log(err); }
+                console.table(result);
+                prompts();
+            })
+            break;
 
+        case 'Manager':
+            const viewbyMansql = `
+            SELECT
+            employee.id,
+            employee.first_name,
+            employee.last_name,
+            department.department_name AS department,
+            roles.role_title AS role,
+            roles.role_salary AS salary,
+            CONCAT(alias_manager.first_name, ' ', alias_manager.last_name) AS manager
+            FROM employee
+            JOIN roles
+            ON employee.role_id = roles.id
+            JOIN department
+            ON roles.department_id = department.id
+            LEFT JOIN employee alias_manager
+            ON employee.manager_id = alias_manager.id
+            ORDER BY
+            manager
+`;
+            db.query(viewbyMansql, (err, result) => {
+                if (err) { console.log(err); }
+                console.table(result);
+                prompts();
+            })
+            break;
+
+        case 'Department':
+            const viewbyDepsql = `
+            SELECT
+            employee.id,
+            employee.first_name,
+            employee.last_name,
+            department.department_name AS department,
+            roles.role_title AS role,
+            roles.role_salary AS salary,
+            CONCAT(alias_manager.first_name, ' ', alias_manager.last_name) AS manager
+            FROM employee
+            JOIN roles
+            ON employee.role_id = roles.id
+            JOIN department
+            ON roles.department_id = department.id
+            LEFT JOIN employee alias_manager
+            ON employee.manager_id = alias_manager.id
+            ORDER BY
+            department
+`;
+            db.query(viewbyDepsql, (err, result) => {
+                if (err) { console.log(err); }
+                console.table(result);
+                prompts();
+            })
+            break;
+    }
 }
 //prompts input for neccesary data to create new employees
 const addEmployee = async () => {
@@ -161,30 +230,20 @@ const addEmployee = async () => {
             message: `What is the employee's last name?`,
         },
         {
-            type: 'expand',
+            type: 'list',
             name: 'role',
-            message: `What is the employee's role ID? Enter h for options.`,
+            message: `What is the employee's role?`,
             choices: roles,
         },
         {
-            type: 'expand',
+            type: 'list',
             name: 'manager',
-            message: `Enter the employee's manager's ID Enter h for options.`,
+            message: `Who is the employee's manager?`,
             choices: managers,
         },
     ])
-    //converts name of role selected to corresponding role id
-    for (i = 0; i < roles.length; i++) {
-        if (addEmpPrompt.role === roles[i].value) {
-            var role_id = roles[i].key;
-        }
-    }
-    //converts manager name selected and converts to corresponding manager id
-    for (i = 0; i < managers.length; i++) {
-        if (addEmpPrompt.manager === managers[i].value) {
-            var manager_id = managers[i].key;
-        }
-    }
+    var role_id = addEmpPrompt.role;
+    var manager_id = addEmpPrompt.manager;
     //adds employee data into database
     const addEmpsql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
         VALUES ("${addEmpPrompt.first_name}", "${addEmpPrompt.last_name}", ${role_id}, ${manager_id});
@@ -215,7 +274,7 @@ const updateEmployee = async () => {
         },
     ])
     var emp_id = updateEmpPrompt.emp_id
-   
+
     //if prompt choice was role OR manager
     switch (updateEmpPrompt.role_or_manager) {
         case 'Role':
@@ -223,18 +282,13 @@ const updateEmployee = async () => {
             var roles = await getRoles();
             var updateRole = await inquirer.prompt([
                 {
-                    type: 'expand',
+                    type: 'list',
                     name: 'role',
-                    message: `Enter new role ID. Enter h for options.`,
+                    message: `Select this employee's role.`,
                     choices: roles,
                 },
             ])
-            //converts name of role selected to corresponding role id
-            for (i = 0; i < roles.length; i++) {
-                if (updateRole.role === roles[i].value) {
-                    var role_id = roles[i].key;
-                }
-            }
+            var role_id = updateRole.role;
             //update employee role for employee with selected ID
             const updateRolesql = `UPDATE employee
                     SET role_id = ${role_id}
@@ -245,25 +299,20 @@ const updateEmployee = async () => {
                 prompts();
             })
             break;
-            
+
         case 'Manager':
             //returns manager id & name as an array of objects with id as key and name as value
             var managers = await getManagers();
             var updateManager = await inquirer.prompt([
                 {
-                    type: 'expand',
+                    type: 'list',
                     name: 'manager',
-                    message: `Enter new manager ID. Enter 'h' for options.`,
+                    message: `Select this employee's manager.`,
                     choices: managers,
                 },
             ])
-            //converts manager name selected and converts to corresponding manager id
-            for (i = 0; i < managers.length; i++) {
-                if (updateManager.manager === managers[i].value) {
-                    var manager_id = managers[i].key;
-                }
-            }
-             //update employee's manager for employee with selected ID
+            var manager_id = updateManager.manager;
+            //update employee's manager for employee with selected ID
             const updateManagersql = `UPDATE employee
                         SET manager_id = ${manager_id}
                         WHERE id = ${emp_id}`;
@@ -277,11 +326,10 @@ const updateEmployee = async () => {
 }
 //displays a table with all exisiting roles joined with department table
 const viewAllRoles = () => {
-    const viewAllRolesql = `SELECT
-    roles.id,
+    const viewAllRolesql = `
+    SELECT DISTINCT
     roles.role_title AS role,
     roles.role_salary AS salary,
-    roles.department_id,
     department.department_name AS department
     FROM roles
     JOIN department
@@ -315,12 +363,7 @@ const addRoles = async () => {
             choices: departments,
         },
     ])
-     //converts department name selected and converts to corresponding id
-    for (i = 0; i < departments.length; i++) {
-        if (addRolePrompt.department === departments[i].value) {
-            var department_id = departments[i].key;
-        }
-    }
+    var department_id = addRolePrompt.department;
     //add roles data into database
     const addRolesql = `INSERT INTO roles (role_title, role_salary, department_id)
     VALUES ("${addRolePrompt.title}", ${addRolePrompt.salary}, ${department_id});
@@ -333,9 +376,10 @@ const addRoles = async () => {
 }
 //displays a table with all exisiting departments
 const viewAllDepartments = () => {
-    const viewAllDepsql = `SELECT 
+    const viewAllDepsql = `
+    SELECT 
     department.id,
-    department.department_name AS department
+    department.department_name AS Departments
     FROM department
     `;
     db.query(viewAllDepsql, (err, result) => {
