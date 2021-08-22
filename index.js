@@ -57,7 +57,7 @@ const getEmployees = async () => {
     var emps = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].Name;
-        var emp = { key: JSON.stringify(parse[i].id), value: temp }
+        var emp = { name: temp, value: JSON.stringify(parse[i].id)}
         emps.push(emp)
     }
     return emps;
@@ -202,9 +202,9 @@ const updateEmployee = async () => {
     var Employees = await getEmployees();
     var updateEmpPrompt = await inquirer.prompt([
         {
-            type: 'expand',
+            type: 'list',
             name: 'emp_id',
-            message: `To update an employee, enter their employee ID. Enter h for options.`,
+            message: `Select an employee to update.`,
             choices: Employees,
         },
         {
@@ -214,12 +214,8 @@ const updateEmployee = async () => {
             choices: ['Role', 'Manager'],
         },
     ])
-    //converts employee name selected and converts to corresponding id
-    for (i = 0; i < Employees.length; i++) {
-        if (updateEmpPrompt.emp_id === Employees[i].value) {
-            var emp_id = Employees[i].key;
-        }
-    }
+    var emp_id = updateEmpPrompt.emp_id
+   
     //if prompt choice was role OR manager
     switch (updateEmpPrompt.role_or_manager) {
         case 'Role':
@@ -249,6 +245,7 @@ const updateEmployee = async () => {
                 prompts();
             })
             break;
+            
         case 'Manager':
             //returns manager id & name as an array of objects with id as key and name as value
             var managers = await getManagers();
