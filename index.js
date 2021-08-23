@@ -14,7 +14,7 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the employees_db database.`)
 )
-//returns name and manager_id of managers as an array of objects with manager_id as key, and name as value
+//returns name and manager_id of managers as an array of objects with name as name, and manager_id as value
 const getManagers = async () => {
     var managerssql = `SELECT DISTINCT m.id, CONCAT(m.first_name, ' ', m.last_name) AS Manager
     FROM employee
@@ -32,7 +32,7 @@ const getManagers = async () => {
     }
     return managers;
 }
-//returns role id & title as an array of objects with id as key and title as value
+//returns role id & title as an array of objects with id as roles as name and role_id as value
 const getRoles = async () => {
     var rolessql = `SELECT id, role_title
      FROM roles`;
@@ -48,7 +48,7 @@ const getRoles = async () => {
     console.log(roles);
     return roles;
 }
-//returns first & last name of employees as an array of objects with id as key, and name as value
+//returns first & last name of employees as an array of objects with name as name, and id as value
 const getEmployees = async () => {
     var empsql = `SELECT DISTINCT id, CONCAT(first_name, ' ', last_name) AS Name
      FROM employee`;
@@ -63,7 +63,7 @@ const getEmployees = async () => {
     }
     return emps;
 }
-//returns id and name of departments as an array of objects with id as key, and name as value
+//returns id and name of departments as an array of objects with department name as name and id as value
 const getDepartment = async () => {
     var depsql = `SELECT id, department_name AS Name
      FROM department`;
