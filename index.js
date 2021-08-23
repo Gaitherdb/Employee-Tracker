@@ -27,7 +27,7 @@ const getManagers = async () => {
     var managers = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].Manager;
-        var manager = { name: temp , value: JSON.stringify(parse[i].id)}
+        var manager = { name: temp, value: JSON.stringify(parse[i].id) }
         managers.push(manager)
     }
     return managers;
@@ -45,13 +45,13 @@ const getRoles = async () => {
         var role = { name: temp, value: JSON.stringify(parse[i].id) }
         roles.push(role)
     }
-    console.log(roles);
     return roles;
 }
 //returns first & last name of employees as an array of objects with name as name, and id as value
 const getEmployees = async () => {
     var empsql = `SELECT DISTINCT id, CONCAT(first_name, ' ', last_name) AS Name
-     FROM employee`;
+     FROM employee
+     ORDER BY id`;
     var result = await db.promise().query(empsql);
     let array = JSON.stringify(result[0]);
     let parse = JSON.parse(array);
@@ -73,7 +73,7 @@ const getDepartment = async () => {
     var deps = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].Name;
-        var dep = { name: temp, value: JSON.stringify(parse[i].id)}
+        var dep = { name: temp, value: JSON.stringify(parse[i].id) }
         deps.push(dep)
     }
     return deps;
@@ -306,21 +306,54 @@ const updateEmployee = async () => {
             var updateManager = await inquirer.prompt([
                 {
                     type: 'list',
-                    name: 'manager',
-                    message: `Select this employee's manager.`,
-                    choices: managers,
+                    name: 'new_or_exist',
+                    message: `Create new manager or select existing manager?`,
+                    choices: ['Create new', 'Existing'],
                 },
             ])
-            var manager_id = updateManager.manager;
-            //update employee's manager for employee with selected ID
-            const updateManagersql = `UPDATE employee
+            switch (updateManager.new_or_exist) {
+                case 'Create new':
+                    var newManager = await inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'manager',
+                            message: `Select this employee's manager.`,
+                            choices: Employees,
+                        },
+                    ])
+                    var newManager_id = newManager.manager;
+                    //update employee's manager for employee with selected ID
+                    const updateNewManagersql = `UPDATE employee
+                        SET manager_id = ${newManager_id}
+                        WHERE id = ${emp_id}`;
+                    db.query(updateNewManagersql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.log("Updated employee.")
+                        prompts();
+                    })
+                    break;
+
+                case 'Existing':
+                    var existManager = await inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'manager',
+                            message: `Select this employee's manager.`,
+                            choices: managers,
+                        },
+                    ])
+                    var manager_id = existManager.manager;
+                    //update employee's manager for employee with selected ID
+                    const updateManagersql = `UPDATE employee
                         SET manager_id = ${manager_id}
                         WHERE id = ${emp_id}`;
-            db.query(updateManagersql, (err, result) => {
-                if (err) { console.log(err); }
-                console.log("Updated employee.")
-                prompts();
-            })
+                    db.query(updateManagersql, (err, result) => {
+                        if (err) { console.log(err); }
+                        console.log("Updated employee.")
+                        prompts();
+                    })
+                    break;
+            }
             break;
     }
 }
