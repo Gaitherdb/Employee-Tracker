@@ -361,6 +361,7 @@ const updateEmployee = async () => {
 const viewAllRoles = () => {
     const viewAllRolesql = `
     SELECT DISTINCT
+    roles.id,
     roles.role_title AS role,
     roles.role_salary AS salary,
     department.department_name AS department
@@ -412,6 +413,7 @@ const addRoles = async () => {
 const viewAllDepartments = () => {
     const viewAllDepsql = `
     SELECT DISTINCT
+    department.id,
     department.department_name AS Departments
     FROM department
     `;
