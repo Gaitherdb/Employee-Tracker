@@ -3,8 +3,7 @@
   ## ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
   ## Description
-
-  A command-line Content Management System (CMS) that allows a user to view and edit employees, roles or departments. This is intended for a company who wants to track their employees and have access to viewing and managing employee roles or departments.
+  A command-line Content Management System (CMS) that allows a user to view and edit employees, roles or departments. This is intended for a company who wants to have access to viewing and managing employees to help organize and plan their business.
   
   Each employee has an ID based on when they were entered into the system, a first and last name, a role, a department which corresponds with the role, a salary based on their role, and a manager if needed.
 
@@ -15,15 +14,14 @@
   * [Usage](#usage)
   * [License](#license)
   * [Contributing](#contributing)
-  * [Tests](#tests)
   * [Questions](#questions)
   
   ## Installation
   To install Node.js, follow the documentation [Node.js](https://coding-boot-camp.github.io/full-stack/nodejs/how-to-install-nodejs)
 
-  To install MySql, follow the documentation [MySQL](https://dev.mysql.com/downloads/installer/)
+  To install MySQL, follow the documentation [MySQL](https://dev.mysql.com/downloads/installer/)
 
-  To install necessary dependencies for your local server, run the following command: 
+  To install necessary dependencies, run the following command: 
   ```
   npm i
   ```
