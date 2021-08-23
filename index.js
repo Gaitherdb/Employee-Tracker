@@ -34,15 +34,15 @@ const getManagers = async () => {
 }
 //returns role id & title as an array of objects with id as roles as name and role_id as value
 const getRoles = async () => {
-    var rolessql = `SELECT id, role_title
+    var rolessql = `SELECT DISTINCT id, role_title
      FROM roles`;
     var result = await db.promise().query(rolessql);
     let array = JSON.stringify(result[0]);
     let parse = JSON.parse(array);
     var roles = [];
     for (i = 0; i < parse.length; i++) {
-        let temp = parse[i].role_title;
-        var role = { name: temp, value: JSON.stringify(parse[i].id) }
+        let temp = parse[i].role_title; 
+        var role = { name: temp, value: JSON.stringify(parse[i].id)}
         roles.push(role)
     }
     return roles;
@@ -65,7 +65,7 @@ const getEmployees = async () => {
 }
 //returns id and name of departments as an array of objects with department name as name and id as value
 const getDepartment = async () => {
-    var depsql = `SELECT id, department_name AS Name
+    var depsql = `SELECT DISTINCT id, department_name AS Name
      FROM department`;
     var result = await db.promise().query(depsql);
     let array = JSON.stringify(result[0]);
@@ -73,7 +73,7 @@ const getDepartment = async () => {
     var deps = [];
     for (i = 0; i < parse.length; i++) {
         let temp = parse[i].Name;
-        var dep = { name: temp, value: JSON.stringify(parse[i].id) }
+        var dep = { name: temp, value: JSON.stringify(parse[i].id)}
         deps.push(dep)
     }
     return deps;
@@ -390,13 +390,14 @@ const addRoles = async () => {
             message: `What is the salary for this role?`,
         },
         {
-            type: 'expand',
+            type: 'list',
             name: 'department',
-            message: `What is department for this role? Enter h for options.`,
+            message: `What is department for this role?`,
             choices: departments,
         },
     ])
     var department_id = addRolePrompt.department;
+    console.log(department_id);
     //add roles data into database
     const addRolesql = `INSERT INTO roles (role_title, role_salary, department_id)
     VALUES ("${addRolePrompt.title}", ${addRolePrompt.salary}, ${department_id});

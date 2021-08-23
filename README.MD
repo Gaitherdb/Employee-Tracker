@@ -5,7 +5,16 @@
   ## Description
   A command-line Content Management System (CMS) that allows a user to view and edit employees, roles or departments. This is intended for a company who wants to have access to viewing and managing employees to help organize and plan their business.
   
-  Each employee has an ID based on when they were entered into the system, a first and last name, a role, a department which corresponds with the role, a salary based on their role, and a manager if needed.
+  Each employee has an ID based on when they were entered into the system, a first and last name, a role, a department which corresponds with the role, a salary based on their role, and a manager if needed. 
+
+  The choices available are:
+  * View all employees by id, manager, or department
+  * Add a new employee
+  * Update employee role or manager - Can create new manager or update to an existing manager
+  * View all roles
+  * Add a new role
+  * View departments
+  * Add a new department
 
   While creating this app, I used Node.js to run the inquirer module to prompt questions, while using MySQL to handle the database and console.table module to display data in tables in the command-line interface. 
 
